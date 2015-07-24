@@ -2,6 +2,8 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+shopt -s extglob
+
 echo "Provisioning virtual machine..."
 apt-get update > /dev/null
 
@@ -37,7 +39,7 @@ apt-get install mysql-server -y > /dev/null
 # Setup Elkarte
 echo "Setting up Elkarte"
 cat /tmp/provision/database.sql | mysql -u root -p1234
-rsync -a --progress /tmp/elkarte/ /var/www/ --exclude=sources --exclude=install > /dev/null
+cp -R /tmp/elkarte/!(sources|install) /var/www/
 cp /tmp/provision/Settings.php /var/www/
 
 # Nginx Configuration
@@ -51,7 +53,7 @@ rm -rf /etc/nginx/sites-available/default
 service nginx restart > /dev/null
 
 # Fix permissions
-chown -R www-data:www-data /var/www
-chmod -R 755 /var/www
+chown -R www-data:www-data /var/www/!(sources)
+chmod -R 755 /var/www/!(sources)
 
 echo "Finished provisioning"
