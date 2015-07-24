@@ -27,6 +27,9 @@ apt-get install php5-common php5-dev php5-cli php5-fpm -y > /dev/null
 echo "Installing PHP extensions"
 apt-get install curl php5-curl php5-gd php5-mcrypt php5-mysql -y > /dev/null
 
+echo "Configuring PHP"
+cp -f /tmp/provision/php.ini /etc/php5/fpm/
+
 # MySQL 
 echo "Preparing MySQL"
 apt-get install debconf-utils -y > /dev/null
@@ -39,12 +42,12 @@ apt-get install mysql-server -y > /dev/null
 # Setup Elkarte
 echo "Setting up Elkarte"
 cat /tmp/provision/database.sql | mysql -u root -p1234
-cp -R /tmp/elkarte/!(sources|install) /var/www/
-cp /tmp/provision/Settings.php /var/www/
+cp -rf /tmp/elkarte/!(sources|install) /var/www/
+cp -f /tmp/provision/Settings.php /var/www/
 
 # Nginx Configuration
 echo "Configuring Nginx"
-cp /tmp/provision/nginx_vhost /etc/nginx/sites-available/nginx_vhost > /dev/null
+cp -f /tmp/provision/nginx_vhost /etc/nginx/sites-available/nginx_vhost > /dev/null
 ln -s /etc/nginx/sites-available/nginx_vhost /etc/nginx/sites-enabled/
 
 rm -rf /etc/nginx/sites-available/default
