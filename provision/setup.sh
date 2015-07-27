@@ -42,7 +42,7 @@ apt-get install mysql-server -y > /dev/null
 # Setup Elkarte
 echo "Setting up Elkarte"
 cat /tmp/provision/database.sql | mysql -u root -p1234
-cp -rf /tmp/elkarte/!(sources|install) /var/www/
+cp -rf /tmp/elkarte/!(sources|themes|install) /var/www/
 cp -f /tmp/provision/Settings.php /var/www/
 
 # Nginx Configuration
@@ -56,7 +56,7 @@ rm -rf /etc/nginx/sites-available/default
 service nginx restart > /dev/null
 
 # Fix permissions
-chown -R www-data:www-data /var/www/!(sources)
-chmod -R 755 /var/www/!(sources)
+chown -R www-data:www-data /var/www/!(sources|themes)
+chmod -R 755 /var/www/!(sources|themes)
 
 echo "Finished provisioning"
