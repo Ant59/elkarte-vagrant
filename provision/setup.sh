@@ -18,7 +18,7 @@ apt-get install nginx -y > /dev/null
 # PHP
 echo "Updating PHP repository"
 apt-get install python-software-properties -y > /dev/null
-add-apt-repository ppa:ondrej/php5-5.6 -y > /dev/null
+add-apt-repository ppa:ondrej/php5-5.6 -y > /dev/null 2>&1
 apt-get update > /dev/null
 
 echo "Installing PHP"
@@ -42,15 +42,16 @@ apt-get install mysql-server -y > /dev/null
 # Setup Elkarte
 echo "Setting up Elkarte"
 cat /tmp/provision/database.sql | mysql -u root -p1234
+rm -rf /var/www/!(sources|themes)
 cp -rf /tmp/elkarte/!(sources|themes|install) /var/www/
 cp -f /tmp/provision/Settings.php /var/www/
 
 # Nginx Configuration
 echo "Configuring Nginx"
 cp -f /tmp/provision/nginx_vhost /etc/nginx/sites-available/nginx_vhost > /dev/null
-ln -s /etc/nginx/sites-available/nginx_vhost /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/nginx_vhost /etc/nginx/sites-enabled/ > /dev/null 2>&1
 
-rm -rf /etc/nginx/sites-available/default
+rm -f /etc/nginx/sites-available/default
 
 # Restart Nginx for the config to take effect
 service nginx restart > /dev/null

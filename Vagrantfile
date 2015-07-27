@@ -11,7 +11,6 @@ Vagrant.configure("2") do |config|
     config.vm.synced_folder "./Elkarte/sources/", "/var/www/sources", create: true, group: "www-data", owner: "www-data"
     config.vm.synced_folder "./Elkarte/themes/", "/var/www/themes", create: true, group: "www-data", owner: "www-data"
     config.vm.synced_folder "./provision/", "/tmp/provision", create: true, group: "www-data", owner: "www-data"
-    config.vm.synced_folder "./provision/Pages/", "/var/www/addons/Pages", create: true, group: "www-data", owner: "www-data"
 
     # VM specific configs
     config.vm.provider "virtualbox" do |v|
