@@ -42,8 +42,8 @@ apt-get install mysql-server -y > /dev/null
 # Setup Elkarte
 echo "Setting up Elkarte"
 cat /tmp/provision/database.sql | mysql -u root -p1234
-rm -rf /var/www/!(sources|themes)
-cp -rf /tmp/elkarte/!(sources|themes|install) /var/www/
+rm -rf /var/www/!(sources|themes|tests)
+cp -rf /tmp/elkarte/!(sources|themes|tests|install) /var/www/
 cp -f /tmp/provision/Settings.php /var/www/
 
 # Nginx Configuration
@@ -57,7 +57,13 @@ rm -f /etc/nginx/sites-available/default
 service nginx restart > /dev/null
 
 # Fix permissions
-chown -R www-data:www-data /var/www/!(sources|themes)
-chmod -R 755 /var/www/!(sources|themes)
+chown -R www-data:www-data /var/www/!(sources|tests|themes)
+chmod -R 755 /var/www/!(sources|tests|themes)
+
+# Install PHPUnit
+echo "Installing PHPUnit"
+wget https://phar.phpunit.de/phpunit.phar > /dev/null 2>&1
+chmod +x phpunit.phar
+mv phpunit.phar /usr/bin/phpunit
 
 echo "Finished provisioning"
