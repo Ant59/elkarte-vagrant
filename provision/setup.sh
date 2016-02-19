@@ -28,7 +28,7 @@ echo "Installing PHP extensions"
 apt-get install curl php5-curl php5-gd php5-mcrypt php5-mysql -y > /dev/null
 
 echo "Configuring PHP"
-cp -f /tmp/provision/php.ini /etc/php5/fpm/
+cp -f /vagrant/provision/php.ini /etc/php5/fpm/
 
 # MySQL 
 echo "Preparing MySQL"
@@ -41,24 +41,18 @@ apt-get install mysql-server -y > /dev/null
 
 # Setup Elkarte
 echo "Setting up Elkarte"
-cat /tmp/provision/database.sql | mysql -u root -p1234
-rm -rf /var/www/!(sources|themes|tests)
-cp -rf /tmp/elkarte/!(sources|themes|tests|install) /var/www/
-cp -f /tmp/provision/Settings.php /var/www/
+cat /vagrant/provision/database.sql | mysql -u root -p1234
+cp -f /vagrant/provision/Settings.php /var/www/
 
 # Nginx Configuration
 echo "Configuring Nginx"
-cp -f /tmp/provision/nginx_vhost /etc/nginx/sites-available/nginx_vhost > /dev/null
+cp -f /vagrant/provision/nginx_vhost /etc/nginx/sites-available/nginx_vhost > /dev/null
 ln -s /etc/nginx/sites-available/nginx_vhost /etc/nginx/sites-enabled/ > /dev/null 2>&1
 
 rm -f /etc/nginx/sites-available/default
 
 # Restart Nginx for the config to take effect
 service nginx restart > /dev/null
-
-# Fix permissions
-chown -R www-data:www-data /var/www/!(sources|tests|themes)
-chmod -R 755 /var/www/!(sources|tests|themes)
 
 # Install PHPUnit
 echo "Installing PHPUnit"

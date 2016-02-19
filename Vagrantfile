@@ -7,11 +7,9 @@ Vagrant.configure("2") do |config|
 	config.vm.network :forwarded_port, guest: 80, host: 8932, auto_correct: true
 
     # Setup synced folder
-    config.vm.synced_folder "./provision/", "/tmp/provision", create: true, group: "www-data", owner: "www-data"
-    config.vm.synced_folder "./Elkarte/", "/tmp/elkarte", create: true, group: "www-data", owner: "www-data"
-    config.vm.synced_folder "./Elkarte/sources/", "/var/www/sources", create: true, group: "www-data", owner: "www-data"
-    config.vm.synced_folder "./Elkarte/themes/", "/var/www/themes", create: true, group: "www-data", owner: "www-data"
-    config.vm.synced_folder "./Elkarte/tests/", "/var/www/tests", create: true, group: "www-data", owner: "www-data"
+    config.vm.synced_folder "./Elkarte", "/var/www", type: "rsync",
+        rsync__exclude: [".git/", "install/"],
+        group: "www-data", owner: "www-data"
 
     # VM specific configs
     config.vm.provider "virtualbox" do |v|
