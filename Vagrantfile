@@ -4,7 +4,7 @@ Vagrant.configure("2") do |config|
 	config.vm.box = "hashicorp/precise32"
 	
 	# Setup port forwarding
-	config.vm.network :forwarded_port, guest: 80, host: 8932, auto_correct: true
+	config.vm.network :forwarded_port, guest: 8932, host: 8932, auto_correct: false
 
     # Setup synced folder
     config.vm.synced_folder "./Elkarte", "/var/www", type: "rsync",

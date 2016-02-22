@@ -22,27 +22,40 @@ add-apt-repository ppa:ondrej/php5-5.6 -y > /dev/null 2>&1
 apt-get update > /dev/null
 
 echo "Installing PHP"
-apt-get install php5-common php5-dev php5-cli php5-fpm -y > /dev/null
+apt-get install php5-common php5-dev php5-cli php5-fpm -y > /dev/null 2>&1
 
 echo "Installing PHP extensions"
-apt-get install curl php5-curl php5-gd php5-mcrypt php5-mysql -y > /dev/null
+apt-get install curl php5-curl php5-gd php5-mcrypt php5-mysql php5-xdebug -y > /dev/null 2>&1
 
 echo "Configuring PHP"
 cp -f /vagrant/provision/php.ini /etc/php5/fpm/
 
 # MySQL 
 echo "Preparing MySQL"
-apt-get install debconf-utils -y > /dev/null
+apt-get install debconf-utils -y > /dev/null 2>&1
 debconf-set-selections <<< "mysql-server mysql-server/root_password password 1234"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password 1234"
 
 echo "Installing MySQL"
-apt-get install mysql-server -y > /dev/null
+apt-get install mysql-server -y > /dev/null 2>&1
 
-# Setup Elkarte
+# phpMyAdmin
+echo "Preparing phpMyAdmin"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/dbconfig-install boolean true"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password 1234"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/admin-pass password 1234"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password 1234"
+debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none"
+
+echo "Install phpMyAdmin"
+apt-get install phpmyadmin -y > /dev/null 2>&1
+ln -s /usr/share/phpmyadmin/ /var/www
+
+# Elkarte
 echo "Setting up Elkarte"
-cat /vagrant/provision/database.sql | mysql -u root -p1234
 cp -f /vagrant/provision/Settings.php /var/www/
+mysql -u root -p1234 -e 'CREATE DATABASE IF NOT EXISTS `elkarte` DEFAULT CHARACTER SET utf8'
+php /vagrant/provision/install.php
 
 # Nginx Configuration
 echo "Configuring Nginx"
