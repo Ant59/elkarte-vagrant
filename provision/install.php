@@ -6,7 +6,7 @@ define('TMP_BOARDDIR', '/var/www');
 require(ELK_INSTALL_DIR . '/installcore.php');
 require(ELK_INSTALL_DIR . '/CommonCode.php');
 
-// Reload settings.
+// Load settings
 require(TMP_BOARDDIR . '/Settings.php');
 definePaths();
 
@@ -14,31 +14,10 @@ $db = load_database();
 
 require(TMP_BOARDDIR . '/themes/default/languages/english/Install.english.php');
 
-// Before running any of the queries, let's make sure another version isn't already installed.
-$result = $db->query('', '
-    SELECT variable, value
-    FROM {db_prefix}settings',
-    array(
-        'db_error_skip' => true,
-    )
-);
-$modSettings = array();
-if ($result !== false)
-{
-    while ($row = $db->fetch_assoc($result))
-        $modSettings[$row['variable']] = $row['value'];
-    $db->free_result($result);
-    // Do they match?  If so, this is just a refresh so charge on!
-    if (!isset($modSettings['elkVersion']) || $modSettings['elkVersion'] != CURRENT_VERSION)
-    {
-        $incontext['error'] = $txt['error_versions_do_not_match'];
-        return false;
-    }
-}
 $modSettings['disableQueryCheck'] = true;
-// Since we are UTF8, select it. PostgreSQL requires passing it as a string...
+
 $db->query('', '
-    SET NAMES {'. ($db_type == 'postgresql' ? 'string' : 'raw') . ':utf8}',
+    SET NAMES {string:utf8}',
     array(
         'db_error_skip' => true,
         'utf8' => 'utf8',
@@ -67,7 +46,50 @@ $replaces['{$default_reserved_names}'] = strtr($replaces['{$default_reserved_nam
 if (!empty($databases[$db_type]['utf8_support']))
     $replaces[') ENGINE=MyISAM;'] = ') ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;';
 
-parse_sqlLines(ELK_INSTALL_DIR . '/install_1-1.php', $replaces);
+// Populate database
+$db_table = db_table_install();
+$db_wrapper = new DbWrapper($db, $replaces);
+$db_table_wrapper = new DbTableWrapper($db_table);
+$exists = array();
+require_once(ELK_INSTALL_DIR . '/install_1-1.php');
+$install_instance = new InstallInstructions_install_1_1($db_wrapper, $db_table_wrapper);
+$methods = get_class_methods($install_instance);
+$tables = array_filter($methods, function($method) {
+    return strpos($method, 'table_') === 0;
+});
+$inserts = array_filter($methods, function($method) {
+    return strpos($method, 'insert_') === 0;
+});
+$others = array_filter($methods, function($method) {
+    return substr($method, 0, 2) !== '__' && strpos($method, 'insert_') !== 0 && strpos($method, 'table_') !== 0;
+});
+foreach ($tables as $table_method)
+{
+    $table_name = substr($table_method, 6);
+    // Copied from DbTable class
+    // Strip out the table name, we might not need it in some cases
+    $real_prefix = preg_match('~^("?)(.+?)\\1\\.(.*?)$~', $db_prefix, $match) === 1 ? $match[3] : $db_prefix;
+    // With or without the database name, the fullname looks like this.
+    $full_table_name = str_replace('{db_prefix}', $real_prefix, $table_name);
+
+    $result = $install_instance->{$table_method}();
+    if ($result === false)
+    {
+        $incontext['failures'][$table_method] = $db->last_error();
+    }
+}
+foreach ($inserts as $insert_method)
+{
+    $table_name = substr($insert_method, 6);
+    if (in_array($table_name, $exists))
+    {
+        $db_wrapper->countMode();
+        $incontext['sql_results']['insert_dups'] += $install_instance->{$insert_method}();
+        $db_wrapper->countMode(false);
+        continue;
+    }
+    $result = $install_instance->{$insert_method}();
+}
 
 // Add the admin user account
 require_once(SOURCEDIR . '/Subs.php');
@@ -95,53 +117,3 @@ $request = $db->insert('',
     ),
     array('id_member')
 );
-
-function parse_sqlLines($sql_file, $replaces)
-{
-    global $txt, $db_prefix;
-    $db = load_database();
-    $db_table = db_table_install();
-    $db_wrapper = new DbWrapper($db, $replaces);
-    $db_table_wrapper = new DbTableWrapper($db_table);
-    $exists = array();
-    require_once($sql_file);
-    $class_name = 'InstallInstructions_' . str_replace('-', '_', basename($sql_file, '.php'));
-    $install_instance = new $class_name($db_wrapper, $db_table_wrapper);
-    $methods = get_class_methods($install_instance);
-    $tables = array_filter($methods, function($method) {
-        return strpos($method, 'table_') === 0;
-    });
-    $inserts = array_filter($methods, function($method) {
-        return strpos($method, 'insert_') === 0;
-    });
-    $others = array_filter($methods, function($method) {
-        return substr($method, 0, 2) !== '__' && strpos($method, 'insert_') !== 0 && strpos($method, 'table_') !== 0;
-    });
-    foreach ($tables as $table_method)
-    {
-        $table_name = substr($table_method, 6);
-        // Copied from DbTable class
-        // Strip out the table name, we might not need it in some cases
-        $real_prefix = preg_match('~^("?)(.+?)\\1\\.(.*?)$~', $db_prefix, $match) === 1 ? $match[3] : $db_prefix;
-        // With or without the database name, the fullname looks like this.
-        $full_table_name = str_replace('{db_prefix}', $real_prefix, $table_name);
-
-        $result = $install_instance->{$table_method}();
-        if ($result === false)
-        {
-            $incontext['failures'][$table_method] = $db->last_error();
-        }
-    }
-    foreach ($inserts as $insert_method)
-    {
-        $table_name = substr($insert_method, 6);
-        if (in_array($table_name, $exists))
-        {
-            $db_wrapper->countMode();
-            $incontext['sql_results']['insert_dups'] += $install_instance->{$insert_method}();
-            $db_wrapper->countMode(false);
-            continue;
-        }
-        $result = $install_instance->{$insert_method}();
-    }
-}
