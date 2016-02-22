@@ -8,7 +8,8 @@ Vagrant.configure("2") do |config|
 
     # Setup synced folder
     config.vm.synced_folder "./Elkarte", "/var/www", type: "rsync",
-        rsync__exclude: [".git/", "install/"],
+        rsync__exclude: [".git/", "install/", "Settings.php"],
+        rsync__auto: true,
         group: "www-data", owner: "www-data"
 
     # VM specific configs
