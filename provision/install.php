@@ -117,3 +117,11 @@ $request = $db->insert('',
     ),
     array('id_member')
 );
+
+// Add some stats
+$db->insert('ignore',
+    '{db_prefix}log_activity',
+    array('date' => 'date', 'topics' => 'int', 'posts' => 'int', 'registers' => 'int'),
+    array(strftime('%Y-%m-%d', time()), 1, 1, (!empty($incontext['member_id']) ? 1 : 0)),
+    array('date')
+);
