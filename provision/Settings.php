@@ -5,7 +5,7 @@ $mmessage = 'Site down for maintenance. We will return shortly.';
 
 $mbname = 'Elkarte';
 $language = 'english';
-$boardurl = 'http://127.0.0.1:8932';
+$boardurl = 'http://elkarte.dev';
 $webmaster_email = 'root@localhost';
 $cookiename = 'elk_auth_cookie';
 
@@ -13,7 +13,7 @@ $db_type = 'mysql';
 $db_server = 'localhost';
 $db_port = '';
 $db_name = 'elkarte';
-$db_user = 'root';
+$db_user = 'elkarte';
 $db_passwd = '1234';
 $ssi_db_user = '';
 $ssi_db_passwd = '';
